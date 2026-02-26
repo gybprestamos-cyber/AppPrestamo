@@ -1,0 +1,2498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MiPréstamo — Panel Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ═══ DARK THEME BASE ═══ */
+    body { font-family: system-ui, -apple-system, sans-serif; background: #141e30; color: #e8eef5; }
+    .card { background: #1e2d44; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.3); border: 1px solid #2d4060; }
+    .tab-active { border-bottom: 3px solid #60a5fa; color: #60a5fa !important; font-weight: 600; }
+
+    /* ═══ BADGES ═══ */
+    .badge { display:inline-flex; align-items:center; padding:2px 10px; border-radius:9999px; font-size:12px; font-weight:600; }
+    .badge-admin        { background:#1e3a5f; color:#93c5fd; }
+    .badge-prestamista  { background:#14532d; color:#86efac; }
+    .badge-activo       { background:#14532d; color:#86efac; }
+    .badge-inactivo     { background:#450a0a; color:#fca5a5; }
+    .badge-active       { background:#14532d; color:#86efac; }
+    .badge-completed    { background:#253347; color:#94a3b8; border:1px solid #2d4060; }
+
+    /* ═══ LOGIN ═══ */
+    .login-card { background:#1e2d44; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.5); padding:2.5rem; width:100%; max-width:420px; border:1px solid #2d4060; }
+    .login-input { width:100%; padding:14px 18px; border:1.5px solid #3d5470; border-radius:12px; font-size:16px; outline:none; transition:border-color .2s; box-sizing:border-box; margin-top:4px; background:#141e30; color:#e8eef5; }
+    .login-input:focus { border-color:#60a5fa; }
+    .login-input::placeholder { color:#5a7a99; }
+    .btn-primary { background:#3b82f6; color:white; padding:14px; border-radius:12px; font-weight:700; font-size:16px; border:none; cursor:pointer; width:100%; transition:background .2s; }
+    .btn-primary:hover:not(:disabled) { background:#2563eb; }
+    .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+    .error-box { background:#450a0a; color:#fca5a5; border-radius:10px; padding:12px 16px; font-size:14px; margin-top:12px; border:1px solid #7f1d1d; }
+
+    /* ═══ TABLE ═══ */
+    th { text-align:left; padding:12px 16px; background:#141e30; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#7a9ab8; font-weight:700; }
+    td { padding:12px 16px; border-bottom:1px solid #1e2d44; font-size:14px; color:#d4deea; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:#253347; }
+
+    /* ═══ MODALS ═══ */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:center; justify-content:center; z-index:100; padding:16px; }
+    .modal-card { background:#1e2d44; border-radius:20px; padding:2rem; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; border:1px solid #2d4060; }
+
+    /* ═══ SELECTS & DATE INPUTS ═══ */
+    select, input[type=date] { border:1.5px solid #3d5470; border-radius:10px; padding:8px 12px; font-size:14px; outline:none; background:#141e30; color:#e8eef5; }
+    select:focus, input[type=date]:focus { border-color:#60a5fa; }
+
+    /* ═══ MISC ═══ */
+    .pwd-blur { filter:blur(5px); user-select:none; transition:filter .2s; }
+    .toggle-wrap { position:relative; display:inline-block; width:46px; height:26px; flex-shrink:0; }
+    .toggle-wrap input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; cursor:pointer; inset:0; background:#2d4060; border-radius:26px; transition:.25s; }
+    .toggle-slider:before { content:''; position:absolute; height:20px; width:20px; left:3px; bottom:3px; background:#7a9ab8; border-radius:50%; transition:.25s; box-shadow:0 1px 3px rgba(0,0,0,.4); }
+    input:checked + .toggle-slider { background:#3b82f6; }
+    input:checked + .toggle-slider:before { transform:translateX(20px); background:white; }
+
+    /* ═══ TAILWIND DARK OVERRIDES ═══ */
+    .bg-white    { background-color: #1e2d44 !important; }
+    .bg-gray-50  { background-color: #141e30 !important; }
+    .bg-gray-100 { background-color: #253347 !important; }
+    .bg-blue-50  { background-color: rgba(59,130,246,0.14) !important; }
+    .bg-blue-100 { background-color: rgba(59,130,246,0.22) !important; }
+    .bg-green-50 { background-color: rgba(34,197,94,0.14) !important; }
+    .bg-red-50   { background-color: rgba(239,68,68,0.14) !important; }
+    .bg-purple-50{ background-color: rgba(168,85,247,0.14) !important; }
+
+    .text-gray-900 { color: #f8fafc !important; }
+    .text-gray-800 { color: #edf2f7 !important; }
+    .text-gray-700 { color: #d4deea !important; }
+    .text-gray-600 { color: #aabcce !important; }
+    .text-gray-500 { color: #8fa8c0 !important; }
+    .text-gray-400 { color: #7a9ab8 !important; }
+
+    .border-gray-100 { border-color: #1e2d44 !important; }
+    .border-gray-200 { border-color: #2d4060 !important; }
+    .shadow-sm { box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important; }
+
+    .hover\:bg-gray-50:hover  { background-color: #253347 !important; }
+    .hover\:bg-gray-100:hover { background-color: #2d4060 !important; }
+    .hover\:bg-gray-200:hover { background-color: #2d4060 !important; }
+
+    .bg-red-50.hover\:bg-red-100:hover,
+    .hover\:bg-red-100:hover   { background: rgba(239,68,68,0.22) !important; }
+    .hover\:bg-green-100:hover { background: rgba(34,197,94,0.22) !important; }
+    .hover\:bg-blue-50:hover   { background: rgba(59,130,246,0.20) !important; }
+
+    /* Accent colors */
+    .text-blue-600  { color: #60a5fa !important; }
+    .text-orange-500{ color: #fb923c !important; }
+    .text-green-600 { color: #4ade80 !important; }
+    .text-red-600   { color: #f87171 !important; }
+    .text-red-500   { color: #f87171 !important; }
+    .text-purple-600{ color: #c084fc !important; }
+    .text-gray-400 .material-symbols-outlined { color: #7a9ab8; }
+
+    /* ═══ REALTIME INDICATOR ═══ */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 2px rgba(34,197,94,0.3); }
+      50%       { opacity: 0.6; box-shadow: 0 0 0 4px rgba(34,197,94,0.1); }
+    }
+    .rt-dot-live    { animation: pulse-dot 2s ease-in-out infinite; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============================================================ -->
+<!-- PANTALLA DE LOGIN                                            -->
+<!-- ============================================================ -->
+<div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+  <div class="login-card">
+    <div class="text-center mb-8">
+      <span class="material-symbols-outlined text-blue-600" style="font-size:56px;">admin_panel_settings</span>
+      <h1 class="text-2xl font-bold text-gray-900 mt-3">Panel Administrador</h1>
+      <p class="text-gray-500 text-sm mt-1">MiPréstamo — Gestión Centralizada</p>
+    </div>
+    <div id="loginError" class="error-box" style="display:none;"></div>
+
+    <!-- Paso 0: Login normal -->
+    <div id="adminResetStep0">
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700">Correo electrónico</label>
+          <input type="email" id="adminEmail" class="login-input" placeholder="admin@correo.com" autocomplete="email" />
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700">Contraseña</label>
+          <input type="password" id="adminPassword" class="login-input" placeholder="Tu contraseña" autocomplete="current-password" />
+        </div>
+        <button id="loginBtn" onclick="adminLogin()" class="btn-primary" style="margin-top:8px;">
+          Ingresar como Admin
+        </button>
+        <div class="text-center" style="margin-top:12px;">
+          <button onclick="adminShowResetStep1()" class="text-sm" style="color:#60a5fa; background:none; border:none; cursor:pointer; text-decoration:underline;">
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 1: Enviar código de restablecimiento -->
+    <div id="adminResetStep1" style="display:none;">
+      <p class="text-sm text-gray-500 mb-4">Ingresa tu correo y te enviaremos un código de 6 dígitos para restablecer tu contraseña.</p>
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700">Correo electrónico</label>
+          <input type="email" id="adminResetEmail" class="login-input" placeholder="admin@correo.com" />
+        </div>
+        <button onclick="adminSendResetCode()" class="btn-primary">
+          Enviar código
+        </button>
+        <div id="adminResetStep1Success" style="display:none; background:#14532d; color:#86efac; border-radius:10px; padding:12px 16px; font-size:14px; margin-top:8px; border:1px solid #166534;">
+          ✓ Código enviado. Revisa tu correo e ingresa el código abajo.
+        </div>
+        <div id="adminResetCodeSection" style="display:none; margin-top:4px;">
+          <label class="text-sm font-medium text-gray-700">Código de verificación (6 dígitos)</label>
+          <input type="text" id="adminResetCode" class="login-input" placeholder="123456" maxlength="6" inputmode="numeric" style="letter-spacing:0.3em; font-size:20px;" />
+          <button onclick="adminVerifyResetCode()" class="btn-primary" style="margin-top:10px;">
+            Verificar código
+          </button>
+        </div>
+        <div class="text-center" style="margin-top:8px;">
+          <button onclick="adminShowResetStep0()" class="text-sm" style="color:#60a5fa; background:none; border:none; cursor:pointer; text-decoration:underline;">
+            ← Volver al login
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 2: Nueva contraseña -->
+    <div id="adminResetStep2" style="display:none;">
+      <p class="text-sm text-gray-500 mb-4">Crea tu nueva contraseña para el panel administrador.</p>
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm font-medium text-gray-700">Nueva contraseña</label>
+          <input type="password" id="adminNewPassword" class="login-input" placeholder="Mínimo 6 caracteres" />
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-700">Confirmar contraseña</label>
+          <input type="password" id="adminConfirmPassword" class="login-input" placeholder="Repite la contraseña" />
+        </div>
+        <button onclick="adminSaveNewPassword()" class="btn-primary">
+          Guardar nueva contraseña
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- APP PRINCIPAL                                                -->
+<!-- ============================================================ -->
+<div id="mainApp" class="hidden min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-blue-600" style="font-size:28px;">admin_panel_settings</span>
+        <div>
+          <h1 class="font-bold text-gray-900 text-base leading-tight">Panel Admin — MiPréstamo</h1>
+          <p class="text-xs text-gray-500" id="adminNameDisplay">Administrador</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- Indicador de conexión en tiempo real -->
+        <div id="realtimeIndicator" class="hidden items-center gap-1.5 text-xs">
+          <span id="realtimeDot" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#eab308;box-shadow:0 0 0 2px rgba(234,179,8,0.3);transition:background .4s,box-shadow .4s;" title="Conectando..."></span>
+          <span id="realtimeLabel" class="hidden sm:inline" style="color:#8fa8c0;">Conectando...</span>
+        </div>
+        <button onclick="adminLogout()" class="flex items-center gap-1 text-sm text-gray-500 hover:text-red-600 transition-colors">
+          <span class="material-symbols-outlined" style="font-size:20px;">logout</span>
+          <span class="hidden sm:inline">Salir</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="bg-white border-b border-gray-100 sticky top-14 z-30">
+    <div class="max-w-7xl mx-auto px-4 flex gap-1 overflow-x-auto">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn py-3 px-4 text-sm text-gray-500 whitespace-nowrap tab-active">Dashboard</button>
+      <button onclick="switchTab('users')"     id="tab-users"     class="tab-btn py-3 px-4 text-sm text-gray-500 whitespace-nowrap">Usuarios</button>
+      <button onclick="switchTab('loans')"     id="tab-loans"     class="tab-btn py-3 px-4 text-sm text-gray-500 whitespace-nowrap">Préstamos</button>
+      <button onclick="switchTab('payments')"  id="tab-payments"  class="tab-btn py-3 px-4 text-sm text-gray-500 whitespace-nowrap">Actividad</button>
+      <button onclick="switchTab('deleted')"   id="tab-deleted"   class="tab-btn py-3 px-4 text-sm text-gray-500 whitespace-nowrap">Eliminados</button>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- ════════════════════ TAB: DASHBOARD ════════════════════ -->
+    <div id="panel-dashboard">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-xl font-bold text-gray-900">Resumen Global</h2>
+        <button onclick="loadAllData()" class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700">
+          <span class="material-symbols-outlined" style="font-size:18px;">refresh</span> Actualizar
+        </button>
+      </div>
+
+      <!-- KPIs globales -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div class="card p-4">
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Prestamistas</p>
+          <p class="text-3xl font-bold text-blue-600 mt-1" id="kpiPrestamistas">—</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Préstamos activos</p>
+          <p class="text-3xl font-bold text-orange-500 mt-1" id="kpiActivos">—</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Capital Prestado</p>
+          <p class="text-2xl font-bold text-blue-600 mt-1" id="kpiCapitalPrestado">—</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Dinero por Cobrar</p>
+          <p class="text-2xl font-bold text-red-600 mt-1" id="kpiPendiente">—</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Completados</p>
+          <p class="text-3xl font-bold text-green-600 mt-1" id="kpiCompletados">—</p>
+        </div>
+      </div>
+
+      <!-- Desglose por prestamista -->
+      <h3 class="text-base font-semibold text-gray-700 mb-3">Desglose por Prestamista</h3>
+      <div id="prestamisiaBreakdown" class="space-y-3">
+        <p class="text-gray-400 text-sm">Cargando...</p>
+      </div>
+    </div>
+
+    <!-- ════════════════════ TAB: USUARIOS ════════════════════ -->
+    <div id="panel-users" class="hidden">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <h2 class="text-xl font-bold text-gray-900">Gestión de Usuarios</h2>
+        <button onclick="openCreateUserModal()"
+                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+          <span class="material-symbols-outlined" style="font-size:18px;">person_add</span>
+          Nuevo Prestamista
+        </button>
+      </div>
+      <div id="usersList" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <p class="text-gray-400 text-sm">Cargando...</p>
+      </div>
+    </div>
+
+    <!-- ════════════════════ TAB: PRÉSTAMOS ════════════════════ -->
+    <div id="panel-loans" class="hidden">
+
+      <!-- Tarjetas resumen (se actualizan al filtrar) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        <div class="card p-4">
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Capital Prestado</p>
+          <p class="text-2xl font-bold text-blue-600 mt-1" id="summaryCapital">—</p>
+          <p class="text-xs text-gray-400 mt-1" id="summaryCapitalLabel">préstamos filtrados</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Saldo Pendiente</p>
+          <p class="text-2xl font-bold text-red-600 mt-1" id="summarySaldo">—</p>
+          <p class="text-xs text-gray-400 mt-1">capital en calle</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Capital Cobrado</p>
+          <p class="text-2xl font-bold text-green-400 mt-1" id="summaryCapCobrado">—</p>
+          <p class="text-xs text-gray-400 mt-1">abonos a capital</p>
+        </div>
+        <div class="card p-4">
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Intereses Cobrados</p>
+          <p class="text-2xl font-bold text-purple-400 mt-1" id="summaryIntCobrado">—</p>
+          <p class="text-xs text-gray-400 mt-1">de préstamos filtrados</p>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="flex flex-wrap gap-3 items-end mb-5">
+        <h2 class="text-xl font-bold text-gray-900 mr-auto">Todos los Préstamos</h2>
+        <input type="text" id="filterCliente" oninput="filterLoans()" placeholder="🔍 Buscar cliente..."
+               style="border:1.5px solid #475569;border-radius:10px;padding:8px 12px;font-size:14px;background:#0f172a;color:#e2e8f0;outline:none;min-width:180px;" />
+        <select id="filterPrestamista" onchange="filterLoans()" class="text-sm">
+          <option value="">Todos los prestamistas</option>
+        </select>
+        <select id="filterEstado" onchange="filterLoans()" class="text-sm">
+          <option value="">Todos los estados</option>
+          <option value="active">Activos</option>
+          <option value="completed">Completados</option>
+        </select>
+        <div class="flex items-center gap-1">
+          <label class="text-xs text-gray-500">Desde</label>
+          <input type="date" id="filterDesde" onchange="filterLoans()" class="text-sm" />
+        </div>
+        <div class="flex items-center gap-1">
+          <label class="text-xs text-gray-500">Hasta</label>
+          <input type="date" id="filterHasta" onchange="filterLoans()" class="text-sm" />
+        </div>
+      </div>
+
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Prestamista</th>
+                <th style="text-align:right">Capital</th>
+                <th style="text-align:right">Saldo</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Tipo</th>
+              </tr>
+            </thead>
+            <tbody id="loansBody">
+              <tr><td colspan="7" class="text-center text-gray-400 py-8">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400 mt-2" id="loansCount"></p>
+    </div>
+
+    <!-- ════════════════════ TAB: ACTIVIDAD ════════════════════ -->
+    <div id="panel-payments" class="hidden">
+
+      <!-- Filtros de actividad -->
+      <div class="flex flex-wrap gap-3 items-end mb-5">
+        <h2 class="text-xl font-bold text-gray-900 mr-auto">Actividad</h2>
+        <select id="filterPagosPrestamista" onchange="renderPayments()" class="text-sm">
+          <option value="">Todos los prestamistas</option>
+        </select>
+        <div class="flex items-center gap-1">
+          <label class="text-xs text-gray-500 font-medium">Desde</label>
+          <input type="date" id="filterPagosDesde" onchange="renderPayments()" class="text-sm" />
+        </div>
+        <div class="flex items-center gap-1">
+          <label class="text-xs text-gray-500 font-medium">Hasta</label>
+          <input type="date" id="filterPagosHasta" onchange="renderPayments()" class="text-sm" />
+        </div>
+        <button onclick="resetPaymentFilters()"
+                class="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-50 border border-gray-200 transition-colors">
+          <span class="material-symbols-outlined" style="font-size:15px;">today</span> Hoy
+        </button>
+      </div>
+
+      <!-- Tarjeta de totales -->
+      <div class="card p-5 mb-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-gray-800">Resumen del Período</h3>
+          <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-lg" id="paymentsDateRange">—</span>
+        </div>
+        <!-- KPIs de totales -->
+        <div class="grid grid-cols-3 gap-4 mb-1">
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Total Cobrado</p>
+            <p class="text-2xl font-bold text-green-600 mt-1" id="totalCobrado">—</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Pagos</p>
+            <p class="text-2xl font-bold text-blue-600 mt-1" id="totalNPagos">—</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Sin Pago</p>
+            <p class="text-2xl font-bold text-red-400 mt-1" id="totalSinPago">—</p>
+          </div>
+        </div>
+        <!-- Desglose por prestamista -->
+        <div id="cobradoPorPrestamista" class="hidden border-t border-gray-100 pt-4 mt-4"></div>
+        <!-- Desglose por fecha -->
+        <div id="cobradoPorFecha" class="hidden border-t border-gray-100 pt-4 mt-4"></div>
+      </div>
+
+      <!-- Lista de pagos -->
+      <div id="paymentsList" class="space-y-2">
+        <p class="text-gray-400 text-sm">Cargando...</p>
+      </div>
+    </div>
+
+    <!-- ════════════════════ TAB: ELIMINADOS ════════════════════ -->
+    <div id="panel-deleted" class="hidden">
+
+      <!-- Filtros -->
+      <div class="flex flex-wrap gap-3 items-end mb-5">
+        <h2 class="text-xl font-bold text-gray-900 mr-auto">Historial de Eliminados</h2>
+        <select id="filterDeletedPrestamista" onchange="renderDeletedHistory()" class="text-sm">
+          <option value="">Todos los prestamistas</option>
+        </select>
+        <div class="flex items-center gap-1">
+          <label class="text-xs text-gray-500 font-medium">Desde</label>
+          <input type="date" id="filterDeletedDesde" onchange="renderDeletedHistory()" class="text-sm" />
+        </div>
+        <div class="flex items-center gap-1">
+          <label class="text-xs text-gray-500 font-medium">Hasta</label>
+          <input type="date" id="filterDeletedHasta" onchange="renderDeletedHistory()" class="text-sm" />
+        </div>
+        <button onclick="loadDeletedHistory()"
+                class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700">
+          <span class="material-symbols-outlined" style="font-size:18px;">refresh</span>
+        </button>
+      </div>
+
+      <!-- Tabla de eliminados -->
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr>
+                <th>Fecha eliminación</th>
+                <th>Prestamista</th>
+                <th>Cliente</th>
+                <th style="text-align:right">Monto eliminado</th>
+                <th>Tipo de pago</th>
+                <th>Notas del pago</th>
+                <th>Fecha del pago</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="deletedBody">
+              <tr><td colspan="8" class="text-center text-gray-400 py-8">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400 mt-2" id="deletedCount"></p>
+    </div>
+
+  </main>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: CREAR USUARIO                                         -->
+<!-- ============================================================ -->
+<div id="createUserModal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold text-gray-900">Crear Nuevo Prestamista</h3>
+      <button onclick="closeCreateUserModal()" class="text-gray-400 hover:text-gray-600">
+        <span class="material-symbols-outlined" style="font-size:24px;">close</span>
+      </button>
+    </div>
+    <div id="createUserError" class="error-box" style="display:none;"></div>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-medium text-gray-700">Nombre completo *</label>
+        <input type="text" id="newUserName" class="login-input" placeholder="Juan Pérez" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">Correo electrónico *</label>
+        <input type="email" id="newUserEmail" class="login-input" placeholder="juan@correo.com" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">Teléfono (opcional)</label>
+        <input type="tel" id="newUserPhone" class="login-input" placeholder="+57 300 000 0000" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">Contraseña *</label>
+        <input type="text" id="newUserPassword" class="login-input" placeholder="Mínimo 6 caracteres" autocomplete="off" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">Rol *</label>
+        <select id="newUserRol" class="login-input" style="padding:14px 18px;">
+          <option value="prestamista">Prestamista</option>
+          <option value="admin">Administrador</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeCreateUserModal()"
+              class="flex-1 border border-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors">
+        Cancelar
+      </button>
+      <button onclick="createPrestamista()" id="createUserBtn"
+              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-colors">
+        Crear Usuario
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: EDITAR USUARIO                                        -->
+<!-- ============================================================ -->
+<div id="editUserModal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold text-gray-900">Editar Prestamista</h3>
+      <button onclick="closeEditUserModal()" class="text-gray-400 hover:text-gray-600">
+        <span class="material-symbols-outlined" style="font-size:24px;">close</span>
+      </button>
+    </div>
+    <div id="editUserError" class="error-box" style="display:none;"></div>
+
+    <!-- Correo (sólo lectura) -->
+    <div class="bg-gray-50 rounded-xl px-4 py-3 mb-5">
+      <p class="text-xs text-gray-500 font-medium mb-0.5">Correo electrónico (no editable)</p>
+      <p class="text-sm font-mono text-gray-800" id="editUserEmail">—</p>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-medium text-gray-700">Nombre completo *</label>
+        <input type="text" id="editUserName" class="login-input" placeholder="Nombre del prestamista" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">Teléfono</label>
+        <input type="tel" id="editUserPhone" class="login-input" placeholder="+57 300 000 0000" />
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-700">Contraseña guardada (referencia)</label>
+        <input type="text" id="editUserPassword" class="login-input" placeholder="Contraseña actual" autocomplete="off" />
+        <div style="background:rgba(234,179,8,0.12);border:1px solid rgba(234,179,8,0.4);border-radius:10px;padding:10px 14px;margin-top:8px;">
+          <p class="text-xs" style="color:#fbbf24;line-height:1.5;">
+            ⚠️ <strong>Este campo es solo de referencia visual.</strong> Para cambiar la contraseña real que usa el usuario para iniciar sesión, usa el botón de abajo.
+          </p>
+        </div>
+        <button onclick="sendPasswordReset()" id="sendResetBtn"
+                style="margin-top:10px;width:100%;padding:11px;border-radius:10px;border:1px solid rgba(96,165,250,0.5);background:rgba(59,130,246,0.12);color:#60a5fa;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;"
+                onmouseover="this.style.background='rgba(59,130,246,0.22)'"
+                onmouseout="this.style.background='rgba(59,130,246,0.12)'">
+          <span style="vertical-align:-3px;font-size:16px;" class="material-symbols-outlined">lock_reset</span>
+          Enviar correo de restablecimiento de contraseña
+        </button>
+      </div>
+      <!-- Toggle activo/inactivo -->
+      <div class="flex items-center justify-between py-3 border-t border-gray-100">
+        <div>
+          <p class="text-sm font-medium text-gray-700">Cuenta activa</p>
+          <p class="text-xs text-gray-400 mt-0.5">Si está inactiva, el prestamista no podrá iniciar sesión</p>
+        </div>
+        <label class="toggle-wrap">
+          <input type="checkbox" id="editUserActivo" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="flex gap-3 mt-6" id="editUserBtns">
+      <button onclick="closeEditUserModal()"
+              class="flex-1 border border-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors">
+        Cancelar
+      </button>
+      <button onclick="saveEditUser()" id="saveEditUserBtn"
+              class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-colors">
+        Guardar Cambios
+      </button>
+    </div>
+
+    <!-- Zona de peligro: eliminar usuario -->
+    <div id="deleteUserZone" style="margin-top:16px;">
+      <div id="deleteUserNormal">
+        <button onclick="showDeleteUserConfirm()"
+                style="width:100%;padding:11px;border-radius:10px;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);color:#f87171;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;"
+                onmouseover="this.style.background='rgba(239,68,68,0.18)'"
+                onmouseout="this.style.background='rgba(239,68,68,0.08)'">
+          <span class="material-symbols-outlined" style="vertical-align:-3px;font-size:16px;">person_remove</span>
+          Eliminar prestamista y todos sus datos
+        </button>
+      </div>
+      <div id="deleteUserConfirm" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.35);border-radius:12px;padding:16px;">
+        <div class="flex items-start gap-3 mb-4">
+          <span class="material-symbols-outlined" style="color:#f87171;font-size:22px;flex-shrink:0;margin-top:1px;">warning</span>
+          <div>
+            <p class="font-semibold text-sm" style="color:#fca5a5;">¿Eliminar a <span id="deleteUserNameLabel">este prestamista</span>?</p>
+            <p class="text-xs mt-1" style="color:#f87171;line-height:1.5;" id="deleteUserCountLabel">Se eliminarán todos sus préstamos e historial de forma permanente.</p>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <button id="confirmDeleteUserBtn" onclick="confirmDeleteUser()"
+                  style="flex:1;padding:10px;border-radius:10px;background:#dc2626;color:white;font-size:14px;font-weight:700;border:none;cursor:pointer;">
+            Sí, eliminar todo
+          </button>
+          <button onclick="cancelDeleteUserConfirm()"
+                  style="flex:1;padding:10px;border-radius:10px;border:1px solid #475569;color:#94a3b8;font-size:14px;font-weight:600;background:none;cursor:pointer;">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // CONFIGURACIÓN INSFORGE
+  // ============================================================
+  const INSFORGE_URL     = 'https://7932yjth.us-east.insforge.app';
+  const INSFORGE_API_KEY = 'ik_f7b044599231a9b686ffa96ca8d475d5';
+
+  // Fecha LOCAL en formato YYYY-MM-DD (evita desfase por zona horaria de UTC)
+  function localDate(d) {
+    const dt = d ? new Date(d) : new Date();
+    const y  = dt.getFullYear();
+    const m  = String(dt.getMonth() + 1).padStart(2, '0');
+    const day= String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  // ============================================================
+  // ESTADO GLOBAL
+  // ============================================================
+  let adminSession       = null;
+  let allLoans           = [];
+  let allProfiles        = [];
+  let allAuthUsers       = [];
+  let allDeletedHistory  = [];
+  let editingUserId      = null;
+
+  // Realtime + Polling
+  let pollingInterval      = null;
+  let tokenRefreshInterval = null;   // renueva el token proactivamente
+  let realtimeSocket       = null;
+  let realtimeRetryTimer   = null;
+  let isRealtimeConnected  = false;
+  let realtimeRetryCount   = 0;
+  const REALTIME_MAX_RETRIES = 3;  // máx 3 intentos; si falla, solo polling
+
+  // /api/auth/users puede devolver 403 con token regular — intentar solo una vez
+  let authUsersAvailable = null; // null=sin probar, false=no disponible
+
+  function getAdminToken() { return adminSession?.accessToken || null; }
+
+  // ============================================================
+  // RESET DE CONTRASEÑA — LOGIN ADMIN
+  // ============================================================
+  let _adminResetOtp = null;
+
+  function adminShowResetStep0() {
+    document.getElementById('adminResetStep0').style.display = '';
+    document.getElementById('adminResetStep1').style.display = 'none';
+    document.getElementById('adminResetStep2').style.display = 'none';
+    document.getElementById('loginError').style.display = 'none';
+    _adminResetOtp = null;
+  }
+
+  function adminShowResetStep1() {
+    document.getElementById('adminResetStep0').style.display = 'none';
+    document.getElementById('adminResetStep1').style.display = '';
+    document.getElementById('adminResetStep2').style.display = 'none';
+    document.getElementById('loginError').style.display = 'none';
+    // Pre-rellenar email si ya lo escribieron
+    const email = document.getElementById('adminEmail').value.trim();
+    if (email) document.getElementById('adminResetEmail').value = email;
+  }
+
+  async function adminSendResetCode() {
+    const email = document.getElementById('adminResetEmail').value.trim();
+    const errDiv = document.getElementById('loginError');
+    errDiv.style.display = 'none';
+    if (!email) { errDiv.textContent = 'Ingresa tu correo.'; errDiv.style.display = ''; return; }
+
+    try {
+      const res = await fetch(`${INSFORGE_URL}/api/auth/email/send-reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': INSFORGE_API_KEY },
+        body: JSON.stringify({ email })
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.message || `Error ${res.status}`);
+      }
+      document.getElementById('adminResetStep1Success').style.display = '';
+      document.getElementById('adminResetCodeSection').style.display = '';
+      document.getElementById('adminResetCode').focus();
+    } catch (e) {
+      errDiv.textContent = 'Error al enviar el código: ' + e.message;
+      errDiv.style.display = '';
+    }
+  }
+
+  async function adminVerifyResetCode() {
+    const email = document.getElementById('adminResetEmail').value.trim();
+    const code  = document.getElementById('adminResetCode').value.trim();
+    const errDiv = document.getElementById('loginError');
+    errDiv.style.display = 'none';
+    if (!code || code.length < 6) { errDiv.textContent = 'Ingresa el código de 6 dígitos.'; errDiv.style.display = ''; return; }
+
+    try {
+      const res = await fetch(`${INSFORGE_URL}/api/auth/email/exchange-reset-password-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': INSFORGE_API_KEY },
+        body: JSON.stringify({ email, code })
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.message || `Código inválido (${res.status})`);
+      }
+      const data = await res.json();
+      _adminResetOtp = data.token;
+      // Ir al paso 2
+      document.getElementById('adminResetStep1').style.display = 'none';
+      document.getElementById('adminResetStep2').style.display = '';
+      document.getElementById('adminNewPassword').focus();
+    } catch (e) {
+      errDiv.textContent = 'Código incorrecto: ' + e.message;
+      errDiv.style.display = '';
+    }
+  }
+
+  async function adminSaveNewPassword() {
+    const newPassword  = document.getElementById('adminNewPassword').value;
+    const confirmPwd   = document.getElementById('adminConfirmPassword').value;
+    const errDiv = document.getElementById('loginError');
+    errDiv.style.display = 'none';
+
+    if (newPassword.length < 6) { errDiv.textContent = 'La contraseña debe tener al menos 6 caracteres.'; errDiv.style.display = ''; return; }
+    if (newPassword !== confirmPwd) { errDiv.textContent = 'Las contraseñas no coinciden.'; errDiv.style.display = ''; return; }
+    if (!_adminResetOtp) { errDiv.textContent = 'Sesión expirada. Inicia el proceso de nuevo.'; errDiv.style.display = ''; adminShowResetStep1(); return; }
+
+    try {
+      const res = await fetch(`${INSFORGE_URL}/api/auth/email/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': INSFORGE_API_KEY },
+        body: JSON.stringify({ newPassword, otp: _adminResetOtp })
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.message || `Error ${res.status}`);
+      }
+      // Éxito — volver al login con mensaje verde
+      const email = document.getElementById('adminResetEmail').value.trim();
+      adminShowResetStep0();
+      document.getElementById('adminEmail').value = email;
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('adminPassword').focus();
+      // Mostrar mensaje de éxito en verde
+      const errDivFinal = document.getElementById('loginError');
+      errDivFinal.style.background = '#14532d';
+      errDivFinal.style.color = '#86efac';
+      errDivFinal.style.borderColor = '#166534';
+      errDivFinal.textContent = '✓ Contraseña actualizada. Ya puedes iniciar sesión.';
+      errDivFinal.style.display = '';
+      setTimeout(() => {
+        errDivFinal.style.display = 'none';
+        errDivFinal.style.background = '';
+        errDivFinal.style.color = '';
+        errDivFinal.style.borderColor = '';
+      }, 5000);
+      _adminResetOtp = null;
+    } catch (e) {
+      errDiv.textContent = 'Error al guardar la contraseña: ' + e.message;
+      errDiv.style.display = '';
+    }
+  }
+
+  // ============================================================
+  // AUTENTICACIÓN ADMIN
+  // ============================================================
+  async function adminLogin() {
+    const email    = document.getElementById('adminEmail').value.trim();
+    const password = document.getElementById('adminPassword').value.trim();
+    const errDiv   = document.getElementById('loginError');
+    const btn      = document.getElementById('loginBtn');
+
+    if (!email || !password) {
+      errDiv.textContent = 'Ingresa correo y contraseña.';
+      errDiv.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Ingresando...';
+    errDiv.style.display = 'none';
+
+    try {
+      const res = await fetch(`${INSFORGE_URL}/api/auth/sessions?client_type=mobile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.message || e.error || 'Credenciales incorrectas');
+      }
+
+      adminSession = await res.json();
+      adminSession._issuedAt = Date.now(); // marca de tiempo para calcular expiración
+
+      const profileRes = await fetch(
+        `${INSFORGE_URL}/api/database/records/profiles?user_id=eq.${adminSession.user.id}`,
+        { headers: { 'Authorization': `Bearer ${adminSession.accessToken}` } }
+      );
+      const profiles = profileRes.ok ? await profileRes.json() : [];
+      const profile  = Array.isArray(profiles) ? profiles[0] : null;
+
+      if (!profile || profile.rol !== 'admin') {
+        adminSession = null;
+        throw new Error('Esta cuenta no tiene permisos de administrador.');
+      }
+
+      adminSession.profile = profile;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      document.getElementById('adminNameDisplay').textContent = profile.nombre || email;
+
+      await loadAllData();
+
+      // Iniciar renovación proactiva de token + polling + realtime
+      startTokenRefresh();
+      startPolling();
+      setupRealtime();
+
+      // Mostrar indicador de conexión
+      const ind = document.getElementById('realtimeIndicator');
+      if (ind) ind.style.display = 'flex';
+
+    } catch (e) {
+      errDiv.textContent = e.message || 'Error de autenticación.';
+      errDiv.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Ingresar como Admin';
+    }
+  }
+
+  function adminLogout() {
+    stopTokenRefresh();
+    stopPolling();
+    teardownRealtime();
+    adminSession = null;
+    allLoans = []; allProfiles = []; allAuthUsers = [];
+    realtimeRetryCount = 0;
+    authUsersAvailable = null;
+    document.getElementById('mainApp').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('adminEmail').value = '';
+    document.getElementById('adminPassword').value = '';
+    // Ocultar indicador
+    const ind = document.getElementById('realtimeIndicator');
+    if (ind) ind.style.display = 'none';
+  }
+
+  // ============================================================
+  // MANEJO DE EXPIRACIÓN DE SESIÓN
+  // ============================================================
+  let _handlingExpiry = false;
+  let _currentLoanDetail = null;
+
+  async function tryRefreshToken() {
+    const rt = adminSession?.refreshToken || adminSession?.refresh_token;
+    if (!rt) return false;
+    try {
+      const res = await fetch(`${INSFORGE_URL}/api/auth/sessions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: rt })
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      if (data.accessToken || data.access_token) {
+        adminSession.accessToken  = data.accessToken  || data.access_token;
+        adminSession.refreshToken = data.refreshToken || data.refresh_token || rt;
+        adminSession._issuedAt    = Date.now(); // reiniciar contador de expiración
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  async function handleExpiredSession() {
+    if (_handlingExpiry) return;
+    _handlingExpiry = true;
+
+    // Intentar renovar el token antes de cerrar sesión
+    const refreshed = await tryRefreshToken();
+    if (refreshed) {
+      _handlingExpiry = false;
+      return; // Token renovado — el próximo poll usará el nuevo token
+    }
+
+    // Refresh falló → cerrar sesión y mostrar mensaje
+    stopTokenRefresh();
+    stopPolling();
+    teardownRealtime();
+    adminSession     = null;
+    allLoans         = [];
+    allProfiles      = [];
+    allAuthUsers     = [];
+    allDeletedHistory= [];
+    realtimeRetryCount  = 0;
+    authUsersAvailable  = null;
+
+    document.getElementById('mainApp').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('adminEmail').value    = '';
+    document.getElementById('adminPassword').value = '';
+    const ind = document.getElementById('realtimeIndicator');
+    if (ind) ind.style.display = 'none';
+
+    const errDiv = document.getElementById('loginError');
+    errDiv.textContent   = '⚠️ Tu sesión expiró. Por favor ingresa nuevamente.';
+    errDiv.style.display = 'block';
+
+    _handlingExpiry = false;
+  }
+
+  // Verifica si la respuesta es 401 y activa el manejo de expiración
+  // Retorna true si fue 401 (el llamador debe abortar la carga)
+  async function checkExpiry(res) {
+    if (res.status === 401) {
+      handleExpiredSession(); // no await: se ejecuta en paralelo
+      return true;
+    }
+    return false;
+  }
+
+  // ============================================================
+  // RENOVACIÓN PROACTIVA DE TOKEN (cada 45 min)
+  // ============================================================
+  function startTokenRefresh() {
+    stopTokenRefresh();
+    // Calcular cuánto tiempo falta para la expiración y renovar 10 min antes
+    const expiresIn = adminSession?.expiresIn || adminSession?.expires_in || 3600; // segundos
+    const refreshIn = Math.max((expiresIn - 600), 2700) * 1000; // mín 45 min, máx expiresIn-10min
+    tokenRefreshInterval = setInterval(async () => {
+      if (!adminSession) return;
+      const ok = await tryRefreshToken();
+      if (!ok) {
+        // Si el refresh falla, intentar una vez más antes de cerrar sesión
+        await new Promise(r => setTimeout(r, 5000));
+        const retry = await tryRefreshToken();
+        if (!retry) handleExpiredSession();
+      }
+    }, refreshIn);
+  }
+
+  function stopTokenRefresh() {
+    if (tokenRefreshInterval) { clearInterval(tokenRefreshInterval); tokenRefreshInterval = null; }
+  }
+
+  // ============================================================
+  // POLLING AUTOMÁTICO (fallback cada 30s)
+  // ============================================================
+  function startPolling() {
+    stopPolling();
+    pollingInterval = setInterval(async () => {
+      if (!adminSession) return;
+      // Chequear si el token está por vencer (menos de 5 minutos) y renovarlo
+      const expiresIn  = adminSession?.expiresIn || adminSession?.expires_in || 3600;
+      const issuedAt   = adminSession._issuedAt || Date.now();
+      const elapsed    = (Date.now() - issuedAt) / 1000;
+      const remaining  = expiresIn - elapsed;
+      if (remaining < 300) {  // menos de 5 minutos restantes
+        await tryRefreshToken();
+      }
+      await loadAllData();
+    }, 30000);
+  }
+
+  function stopPolling() {
+    if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+  }
+
+  // ============================================================
+  // REALTIME VÍA WEBSOCKET (InsForge / Supabase protocol)
+  // ============================================================
+  function setupRealtime() {
+    // Limpiar intento anterior
+    if (realtimeRetryTimer) { clearTimeout(realtimeRetryTimer); realtimeRetryTimer = null; }
+    if (realtimeSocket) {
+      realtimeSocket.onclose = null;
+      if (realtimeSocket._heartbeat) clearInterval(realtimeSocket._heartbeat);
+      realtimeSocket.close();
+      realtimeSocket = null;
+    }
+
+    const wsBase = INSFORGE_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+    const wsUrl  = `${wsBase}/realtime/v1/websocket?apikey=${INSFORGE_API_KEY}&vsn=1.0.0`;
+
+    let socket;
+    try { socket = new WebSocket(wsUrl); }
+    catch (e) {
+      scheduleRealtimeRetry();
+      return;
+    }
+    realtimeSocket = socket;
+
+    socket.onopen = () => {
+      realtimeRetryCount  = 0; // reset en caso de reconexión exitosa
+      isRealtimeConnected = true;
+      updateRealtimeIndicator();
+
+      // Suscribirse a cambios en prestamos
+      socket.send(JSON.stringify({
+        topic:   'realtime:public:prestamos',
+        event:   'phx_join',
+        payload: { config: { broadcast: { self: false }, presence: { key: '' } } },
+        ref:     '1'
+      }));
+      // Suscribirse a cambios en profiles
+      socket.send(JSON.stringify({
+        topic:   'realtime:public:profiles',
+        event:   'phx_join',
+        payload: { config: { broadcast: { self: false }, presence: { key: '' } } },
+        ref:     '2'
+      }));
+
+      // Heartbeat cada 25s para mantener la conexión viva
+      socket._heartbeat = setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: null }));
+        }
+      }, 25000);
+    };
+
+    socket.onmessage = async (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        // Eventos de cambio de datos
+        const evType = msg.event || (msg.payload && msg.payload.type) || '';
+        if (evType === 'INSERT' || evType === 'UPDATE' || evType === 'DELETE') {
+          await loadAllData();
+        }
+      } catch (_) {}
+    };
+
+    socket.onerror = () => {
+      isRealtimeConnected = false;
+      updateRealtimeIndicator();
+    };
+
+    socket.onclose = () => {
+      isRealtimeConnected = false;
+      updateRealtimeIndicator();
+      if (socket._heartbeat) clearInterval(socket._heartbeat);
+      scheduleRealtimeRetry();
+    };
+  }
+
+  function scheduleRealtimeRetry() {
+    if (adminSession && realtimeRetryCount < REALTIME_MAX_RETRIES) {
+      realtimeRetryCount++;
+      realtimeRetryTimer = setTimeout(setupRealtime, 10000);
+    } else {
+      // Agotados los reintentos: WebSocket no disponible, solo polling activo
+      updateRealtimeIndicator(); // muestra indicador amarillo permanente
+    }
+  }
+
+  function teardownRealtime() {
+    if (realtimeRetryTimer) { clearTimeout(realtimeRetryTimer); realtimeRetryTimer = null; }
+    if (realtimeSocket) {
+      if (realtimeSocket._heartbeat) clearInterval(realtimeSocket._heartbeat);
+      realtimeSocket.onclose = null;
+      realtimeSocket.close();
+      realtimeSocket = null;
+    }
+    isRealtimeConnected = false;
+    updateRealtimeIndicator();
+  }
+
+  function updateRealtimeIndicator() {
+    const dot   = document.getElementById('realtimeDot');
+    const label = document.getElementById('realtimeLabel');
+    if (!dot) return;
+    if (isRealtimeConnected) {
+      dot.style.background  = '#22c55e';
+      dot.style.boxShadow   = '0 0 0 2px rgba(34,197,94,0.3)';
+      dot.title             = 'Tiempo real activo';
+      dot.classList.add('rt-dot-live');
+      if (label) { label.textContent = 'En vivo'; label.style.color = '#4ade80'; }
+    } else {
+      dot.style.background  = '#eab308';
+      dot.style.boxShadow   = '0 0 0 2px rgba(234,179,8,0.3)';
+      dot.title             = adminSession ? 'Reconectando...' : 'Desconectado';
+      dot.classList.remove('rt-dot-live');
+      if (label) {
+      const txt = !adminSession ? 'Polling'
+                : realtimeRetryCount < REALTIME_MAX_RETRIES ? 'Reconectando...'
+                : 'Solo polling';
+      label.textContent = txt;
+      label.style.color = '#8fa8c0';
+    }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('adminPassword').addEventListener('keypress', e => {
+      if (e.key === 'Enter') adminLogin();
+    });
+    document.getElementById('adminEmail').addEventListener('keypress', e => {
+      if (e.key === 'Enter') document.getElementById('adminPassword').focus();
+    });
+    document.getElementById('adminResetCode').addEventListener('keypress', e => {
+      if (e.key === 'Enter') adminVerifyResetCode();
+    });
+    document.getElementById('adminConfirmPassword').addEventListener('keypress', e => {
+      if (e.key === 'Enter') adminSaveNewPassword();
+    });
+    // Filtros de pagos: por defecto hoy (fecha local)
+    const today = localDate();
+    document.getElementById('filterPagosDesde').value = today;
+    document.getElementById('filterPagosHasta').value = today;
+  });
+
+  // ============================================================
+  // CARGA DE DATOS
+  // ============================================================
+  async function loadAllData() {
+    await Promise.all([loadProfiles(), loadAllLoans(), loadAuthUsers(), loadDeletedHistory()]);
+    renderDashboard();
+    renderUsers();
+    renderLoans();
+    renderPayments();
+    renderDeletedHistory();
+  }
+
+  async function loadProfiles() {
+    try {
+      const res = await fetch(
+        `${INSFORGE_URL}/api/database/records/profiles?order=created_at.asc&limit=500`,
+        { headers: { 'Authorization': `Bearer ${getAdminToken()}` } }
+      );
+      if (await checkExpiry(res)) return;
+      allProfiles = res.ok ? (await res.json()) : [];
+    } catch { allProfiles = []; }
+  }
+
+  async function loadAllLoans() {
+    try {
+      const res = await fetch(
+        `${INSFORGE_URL}/api/database/records/prestamos?order=created_at.desc&limit=2000`,
+        { headers: { 'Authorization': `Bearer ${getAdminToken()}` } }
+      );
+      if (await checkExpiry(res)) return;
+      allLoans = res.ok ? (await res.json()) : [];
+    } catch { allLoans = []; }
+  }
+
+  async function loadAuthUsers() {
+    // Si ya sabemos que el endpoint devuelve 403, no hacer más peticiones
+    if (authUsersAvailable === false) return;
+    try {
+      const res = await fetch(
+        `${INSFORGE_URL}/api/auth/users`,
+        { headers: { 'Authorization': `Bearer ${getAdminToken()}` } }
+      );
+      if (res.status === 403) {
+        // Token regular no tiene acceso; emails vienen del campo 'email' en profiles
+        authUsersAvailable = false;
+        allAuthUsers = [];
+        return;
+      }
+      if (!res.ok) { allAuthUsers = []; return; }
+      const data = await res.json();
+      allAuthUsers = Array.isArray(data) ? data : (data.users || data.data || []);
+      authUsersAvailable = true;
+    } catch { allAuthUsers = []; }
+  }
+
+  // ============================================================
+  // DASHBOARD
+  // ============================================================
+  function renderDashboard() {
+    const prestamistas    = allProfiles.filter(p => p.rol === 'prestamista');
+    const active          = allLoans.filter(l => l.estado === 'active');
+    const completed       = allLoans.filter(l => l.estado === 'completed');
+    const pendiente       = active.reduce((s, l) => s + Number(l.saldo_actual    || 0), 0);
+    const capitalPrestado = allLoans.reduce((s, l) => s + Number(l.monto_principal || 0), 0);
+
+    document.getElementById('kpiPrestamistas').textContent    = prestamistas.length;
+    document.getElementById('kpiActivos').textContent         = active.length;
+    document.getElementById('kpiCapitalPrestado').textContent = '$' + capitalPrestado.toLocaleString();
+    document.getElementById('kpiPendiente').textContent       = '$' + pendiente.toLocaleString();
+    document.getElementById('kpiCompletados').textContent     = completed.length;
+
+    const container = document.getElementById('prestamisiaBreakdown');
+    if (prestamistas.length === 0) {
+      container.innerHTML = '<p class="text-gray-400 text-sm">Sin prestamistas registrados aún.</p>';
+      return;
+    }
+
+    container.innerHTML = prestamistas.map(p => {
+      const mine     = allLoans.filter(l => l.prestamista_id === p.user_id);
+      const mineAct  = mine.filter(l => l.estado === 'active');
+      const mineBal  = mineAct.reduce((s, l) => s + Number(l.saldo_actual || 0), 0);
+      const totalCap = mine.reduce((s, l) => s + Number(l.monto_principal || 0), 0);
+      const isActive = p.activo !== false;
+
+      return `
+        <div class="card p-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="bg-blue-100 rounded-full p-2.5">
+              <span class="material-symbols-outlined text-blue-600" style="font-size:22px;">person</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <p class="font-semibold text-gray-900">${esc(p.nombre)}</p>
+                <span class="badge badge-${isActive ? 'activo' : 'inactivo'}">${isActive ? 'Activo' : 'Inactivo'}</span>
+              </div>
+              <p class="text-xs text-gray-500">${esc(p.telefono || 'Sin teléfono')}</p>
+              <p class="text-xs text-gray-400 mt-0.5">${mine.length} préstamos (${mineAct.length} activos)</p>
+            </div>
+          </div>
+          <div class="flex gap-6 text-right">
+            <div>
+              <p class="font-bold text-blue-600 text-lg">$${totalCap.toLocaleString()}</p>
+              <p class="text-xs text-gray-400">prestado</p>
+            </div>
+            <div>
+              <p class="font-bold text-red-600 text-lg">$${mineBal.toLocaleString()}</p>
+              <p class="text-xs text-gray-400">en calle</p>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ============================================================
+  // USUARIOS — con correo, contraseña, editar, activar/desactivar
+  // ============================================================
+  function renderUsers() {
+    const container = document.getElementById('usersList');
+    if (allProfiles.length === 0) {
+      container.innerHTML = '<p class="text-gray-400 text-sm">Sin usuarios registrados.</p>';
+      return;
+    }
+
+    const authMap = Object.fromEntries(allAuthUsers.map(u => [u.id, u]));
+
+    container.innerHTML = allProfiles.map(p => {
+      const mine     = allLoans.filter(l => l.prestamista_id === p.user_id);
+      const authUser = authMap[p.user_id] || {};
+      const email    = authUser.email || p.email || '—';
+      const isActive = p.activo !== false;
+      const isPrest  = p.rol === 'prestamista';
+      const hasPwd   = !!p.contrasena_texto;
+
+      return `
+        <div class="card p-4">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <!-- Información -->
+            <div class="flex items-start gap-3 flex-1 min-w-0">
+              <div class="rounded-full p-2.5 shrink-0 ${isActive ? 'bg-blue-50' : 'bg-gray-100'}">
+                <span class="material-symbols-outlined ${isActive ? 'text-blue-500' : 'text-gray-400'}" style="font-size:22px;">
+                  ${p.rol === 'admin' ? 'admin_panel_settings' : 'person'}
+                </span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <p class="font-semibold text-gray-900">${esc(p.nombre)}</p>
+                  <span class="badge badge-${p.rol}">${p.rol}</span>
+                  <span class="badge badge-${isActive ? 'activo' : 'inactivo'}">${isActive ? 'Activo' : 'Inactivo'}</span>
+                </div>
+                <!-- Correo -->
+                <p class="text-xs text-gray-500 font-mono mt-1">${esc(email)}</p>
+                ${p.telefono ? `<p class="text-xs text-gray-400 mt-0.5">${esc(p.telefono)}</p>` : ''}
+                ${isPrest ? `<p class="text-xs text-gray-400 mt-0.5">${mine.length} préstamos registrados</p>` : ''}
+                <!-- Contraseña con toggle de visibilidad -->
+                ${isPrest ? `
+                  <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs text-gray-500 font-medium shrink-0">Contraseña:</span>
+                    ${hasPwd
+                      ? `<span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded pwd-blur" id="pwd-${p.user_id}">${esc(p.contrasena_texto)}</span>
+                         <button onclick="togglePasswordVisibility('${p.user_id}')"
+                                 class="text-gray-400 hover:text-gray-700 transition-colors shrink-0">
+                           <span class="material-symbols-outlined" style="font-size:16px;" id="eye-${p.user_id}">visibility</span>
+                         </button>`
+                      : `<span class="text-xs text-gray-400 italic">No guardada — edita para agregarla</span>`}
+                  </div>` : ''}
+              </div>
+            </div>
+            <!-- Acciones (solo para prestamistas) -->
+            ${isPrest ? `
+              <div class="flex gap-2 shrink-0 flex-wrap">
+                <button onclick="openEditUserModal('${p.user_id}')"
+                        class="flex items-center gap-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition-colors font-medium">
+                  <span class="material-symbols-outlined" style="font-size:15px;">edit</span> Editar
+                </button>
+                <button onclick="toggleUserActive('${p.user_id}', ${isActive})"
+                        class="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors
+                               ${isActive
+                                 ? 'bg-red-50 hover:bg-red-100 text-red-600'
+                                 : 'bg-green-50 hover:bg-green-100 text-green-600'}">
+                  <span class="material-symbols-outlined" style="font-size:15px;">${isActive ? 'block' : 'check_circle'}</span>
+                  ${isActive ? 'Desactivar' : 'Activar'}
+                </button>
+                <button onclick="openDeleteUserConfirm('${p.user_id}')"
+                        class="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors bg-red-50 hover:bg-red-100 text-red-600">
+                  <span class="material-symbols-outlined" style="font-size:15px;">person_remove</span>
+                  Eliminar
+                </button>
+              </div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function togglePasswordVisibility(userId) {
+    const el  = document.getElementById(`pwd-${userId}`);
+    const eye = document.getElementById(`eye-${userId}`);
+    if (!el || !eye) return;
+    const isBlurred = el.classList.contains('pwd-blur');
+    el.classList.toggle('pwd-blur', !isBlurred);
+    el.style.userSelect  = isBlurred ? 'text' : 'none';
+    eye.textContent = isBlurred ? 'visibility_off' : 'visibility';
+  }
+
+  async function toggleUserActive(userId, currentActive) {
+    const action = currentActive ? 'desactivar' : 'activar';
+    const msg    = currentActive
+      ? '¿Desactivar este usuario? No podrá iniciar sesión en la app.'
+      : '¿Activar este usuario? Podrá iniciar sesión nuevamente.';
+    if (!confirm(msg)) return;
+
+    try {
+      const res = await fetch(
+        `${INSFORGE_URL}/api/database/records/profiles?user_id=eq.${userId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${getAdminToken()}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ activo: !currentActive })
+        }
+      );
+      if (!res.ok) throw new Error('Error al actualizar el estado del usuario');
+      const profile = allProfiles.find(p => p.user_id === userId);
+      if (profile) profile.activo = !currentActive;
+      renderUsers();
+      renderDashboard();
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  function openEditUserModal(userId) {
+    const profile = allProfiles.find(p => p.user_id === userId);
+    if (!profile) return;
+    editingUserId = userId;
+
+    const authMap  = Object.fromEntries(allAuthUsers.map(u => [u.id, u]));
+    const authUser = authMap[userId] || {};
+    const email    = authUser.email || profile.email || 'No disponible';
+
+    document.getElementById('editUserEmail').textContent      = email;
+    document.getElementById('editUserName').value             = profile.nombre   || '';
+    document.getElementById('editUserPhone').value            = profile.telefono || '';
+    document.getElementById('editUserPassword').value         = profile.contrasena_texto || '';
+    document.getElementById('editUserActivo').checked         = profile.activo !== false;
+    document.getElementById('editUserError').style.display    = 'none';
+    document.getElementById('editUserModal').classList.remove('hidden');
+    setTimeout(() => document.getElementById('editUserName').focus(), 100);
+  }
+
+  function closeEditUserModal() {
+    document.getElementById('editUserModal').classList.add('hidden');
+    cancelDeleteUserConfirm(); // resetear zona de peligro
+    editingUserId = null;
+  }
+
+  // ── Eliminar usuario ──────────────────────────────────────────
+  function openDeleteUserConfirm(userId) {
+    // Abre el modal de edición y salta directo a la confirmación de eliminación
+    const profile = allProfiles.find(p => p.user_id === userId);
+    if (!profile) return;
+    openEditUserModal(userId);
+    setTimeout(() => showDeleteUserConfirm(), 120);
+  }
+
+  function showDeleteUserConfirm() {
+    if (!editingUserId) return;
+    const profile   = allProfiles.find(p => p.user_id === editingUserId);
+    const nombre    = profile ? profile.nombre : '—';
+    const loanCount = allLoans.filter(l => l.prestamista_id === editingUserId).length;
+
+    document.getElementById('deleteUserNameLabel').textContent = `"${nombre}"`;
+    document.getElementById('deleteUserCountLabel').textContent =
+      `Se eliminarán ${loanCount} préstamo(s) y todo el historial de forma permanente e irreversible.`;
+
+    document.getElementById('deleteUserNormal').style.display  = 'none';
+    document.getElementById('deleteUserConfirm').style.display = '';
+    // Ocultar botones de guardar/cancelar para evitar confusión
+    document.getElementById('editUserBtns').style.display      = 'none';
+  }
+
+  function cancelDeleteUserConfirm() {
+    const normal  = document.getElementById('deleteUserNormal');
+    const confirm = document.getElementById('deleteUserConfirm');
+    const btns    = document.getElementById('editUserBtns');
+    if (normal)  normal.style.display  = '';
+    if (confirm) confirm.style.display = 'none';
+    if (btns)    btns.style.display    = '';
+  }
+
+  async function confirmDeleteUser() {
+    if (!editingUserId) return;
+    const userId  = editingUserId;
+    const profile = allProfiles.find(p => p.user_id === userId);
+    const nombre  = profile ? profile.nombre : userId;
+
+    const btn = document.getElementById('confirmDeleteUserBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Eliminando...';
+
+    let errors = 0;
+
+    // 1. Eliminar todos los préstamos del prestamista
+    try {
+      const res = await fetch(
+        `${INSFORGE_URL}/api/database/records/prestamos?prestamista_id=eq.${userId}`,
+        { method: 'DELETE', headers: { 'Authorization': `Bearer ${getAdminToken()}` } }
+      );
+      if (!res.ok && res.status !== 404) errors++;
+    } catch { errors++; }
+
+    // 2. Eliminar historial de eliminados del prestamista
+    try {
+      const res = await fetch(
+        `${INSFORGE_URL}/api/database/records/historial_eliminados?prestamista_id=eq.${userId}`,
+        { method: 'DELETE', headers: { 'Authorization': `Bearer ${getAdminToken()}` } }
+      );
+      // 404 = no había registros, es OK
+    } catch {}
+
+    // 3. Eliminar el perfil
+    try {
+      const res = await fetch(
+        `${INSFORGE_URL}/api/database/records/profiles?user_id=eq.${userId}`,
+        { method: 'DELETE', headers: { 'Authorization': `Bearer ${getAdminToken()}` } }
+      );
+      if (!res.ok && res.status !== 404) errors++;
+    } catch { errors++; }
+
+    // 4. Intentar eliminar el usuario de Auth (puede no estar disponible)
+    try {
+      await fetch(
+        `${INSFORGE_URL}/api/auth/users/${userId}`,
+        { method: 'DELETE', headers: { 'Authorization': `Bearer ${getAdminToken()}` } }
+      );
+      // No importa si falla (403 o 404): el perfil ya fue borrado
+    } catch {}
+
+    btn.disabled    = false;
+    btn.textContent = 'Sí, eliminar todo';
+
+    closeEditUserModal();
+
+    // Actualizar estado local
+    allProfiles      = allProfiles.filter(p => p.user_id !== userId);
+    allLoans         = allLoans.filter(l => l.prestamista_id !== userId);
+    allDeletedHistory= allDeletedHistory.filter(r => r.prestamista_id !== userId);
+
+    renderUsers();
+    renderDashboard();
+    renderLoans();
+    renderDeletedHistory();
+
+    showAdminToast(
+      errors === 0
+        ? `Prestamista "${nombre}" eliminado correctamente.`
+        : `Prestamista eliminado con ${errors} error(es). Verifica en InsForge.`,
+      errors > 0
+    );
+  }
+
+  async function sendPasswordReset() {
+    if (!editingUserId) return;
+    const profile  = allProfiles.find(p => p.user_id === editingUserId);
+    const authMap  = Object.fromEntries(allAuthUsers.map(u => [u.id, u]));
+    const authUser = authMap[editingUserId] || {};
+    const email    = authUser.email || profile?.email;
+
+    if (!email) {
+      showAdminToast('No se encontró el correo del usuario.', true);
+      return;
+    }
+
+    const btn = document.getElementById('sendResetBtn');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+      const res = await fetch(`${INSFORGE_URL}/api/auth/email/send-reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      // InsForge siempre devuelve 200 por seguridad (aunque el email no exista)
+      showAdminToast(`Correo de restablecimiento enviado a ${email}`);
+    } catch {
+      showAdminToast('Error al enviar el correo de restablecimiento.', true);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span style="vertical-align:-3px;font-size:16px;" class="material-symbols-outlined">lock_reset</span> Enviar correo de restablecimiento de contraseña';
+    }
+  }
+
+  async function saveEditUser() {
+    if (!editingUserId) return;
+    const nombre    = document.getElementById('editUserName').value.trim();
+    const telefono  = document.getElementById('editUserPhone').value.trim();
+    const contrasena= document.getElementById('editUserPassword').value.trim();
+    const activo    = document.getElementById('editUserActivo').checked;
+    const errDiv    = document.getElementById('editUserError');
+    const btn       = document.getElementById('saveEditUserBtn');
+
+    if (!nombre) {
+      errDiv.textContent = 'El nombre es requerido.';
+      errDiv.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+    errDiv.style.display = 'none';
+
+    try {
+      // 1. Actualizar perfil en DB (nombre, teléfono, activo, contraseña visible)
+      const updateData = { nombre, telefono: telefono || null, activo };
+      if (contrasena) updateData.contrasena_texto = contrasena;
+
+      const res = await fetch(
+        `${INSFORGE_URL}/api/database/records/profiles?user_id=eq.${editingUserId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${getAdminToken()}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        }
+      );
+
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.message || e.error || 'Error al guardar los cambios');
+      }
+
+      // Nota: InsForge no expone un endpoint admin para forzar cambio de contraseña.
+      // La contraseña se guarda en contrasena_texto solo como registro del admin.
+      // El cambio real en Auth se hace desde el panel de InsForge o enviando reset email.
+
+      // 3. Actualizar estado local
+      const profile = allProfiles.find(p => p.user_id === editingUserId);
+      if (profile) {
+        profile.nombre   = nombre;
+        profile.telefono = telefono || null;
+        profile.activo   = activo;
+        if (contrasena) profile.contrasena_texto = contrasena;
+      }
+
+      closeEditUserModal();
+      showAdminToast(contrasena ? 'Usuario y contraseña actualizados.' : 'Usuario actualizado.');
+      renderUsers();
+      renderDashboard();
+
+    } catch (e) {
+      errDiv.textContent = e.message;
+      errDiv.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Guardar Cambios';
+    }
+  }
+
+  function openCreateUserModal() {
+    document.getElementById('createUserModal').classList.remove('hidden');
+    document.getElementById('createUserError').style.display = 'none';
+    ['newUserName','newUserEmail','newUserPhone','newUserPassword'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('newUserRol').value = 'prestamista';
+    setTimeout(() => document.getElementById('newUserName').focus(), 100);
+  }
+
+  function closeCreateUserModal() {
+    document.getElementById('createUserModal').classList.add('hidden');
+  }
+
+  async function createPrestamista() {
+    const name     = document.getElementById('newUserName').value.trim();
+    const email    = document.getElementById('newUserEmail').value.trim();
+    const phone    = document.getElementById('newUserPhone').value.trim();
+    const password = document.getElementById('newUserPassword').value.trim();
+    const rol      = document.getElementById('newUserRol').value;
+    const errDiv   = document.getElementById('createUserError');
+    const btn      = document.getElementById('createUserBtn');
+
+    if (!name || !email || !password) {
+      errDiv.textContent = 'Nombre, correo y contraseña son requeridos.';
+      errDiv.style.display = 'block';
+      return;
+    }
+    if (password.length < 6) {
+      errDiv.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+      errDiv.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creando...';
+    errDiv.style.display = 'none';
+
+    try {
+      // 1. Crear en Auth
+      const regRes = await fetch(`${INSFORGE_URL}/api/auth/users?client_type=mobile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name })
+      });
+
+      if (!regRes.ok) {
+        const e = await regRes.json().catch(() => ({}));
+        throw new Error(e.message || e.error || 'Error al crear el usuario en Auth');
+      }
+
+      const regData   = await regRes.json();
+      const newUserId = regData.user?.id;
+      if (!newUserId) throw new Error('No se recibió el ID del usuario creado.');
+
+      // 2. Crear perfil en DB
+      // Intentar primero con columnas email/contrasena_texto (requieren ALTER TABLE previo).
+      // Si falla, reintentar con las columnas base para no bloquear la creación.
+      const buildProfile = (withExtras) => [{
+        user_id:  newUserId,
+        nombre:   name,
+        telefono: phone || null,
+        rol,
+        activo:   true,
+        ...(withExtras ? { email, contrasena_texto: password } : {})
+      }];
+
+      const postProfile = (payload) => fetch(`${INSFORGE_URL}/api/database/records/profiles`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${getAdminToken()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      let profRes = await postProfile(buildProfile(true));
+
+      // Si falló con las columnas extras, reintentar sin ellas
+      if (!profRes.ok && profRes.status !== 201) {
+        profRes = await postProfile(buildProfile(false));
+      }
+
+      if (!profRes.ok && profRes.status !== 201) {
+        throw new Error('Usuario creado en Auth pero no se pudo guardar el perfil en DB.');
+      }
+
+      closeCreateUserModal();
+      const rolLabel = rol === 'admin' ? 'Administrador' : 'Prestamista';
+      alert(`✅ ${rolLabel} "${name}" creado exitosamente.\n\nCorreo: ${email}\nContraseña: ${password}\n\nComparte estas credenciales para que pueda ingresar.`);
+      await loadAllData();
+
+    } catch (e) {
+      errDiv.textContent = e.message;
+      errDiv.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Crear Usuario';
+    }
+  }
+
+  // ============================================================
+  // PRÉSTAMOS — con tarjetas de resumen
+  // ============================================================
+  function renderLoans() {
+    const sel = document.getElementById('filterPrestamista');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Todos los prestamistas</option>' +
+      allProfiles.filter(p => p.rol === 'prestamista').map(p =>
+        `<option value="${p.user_id}" ${p.user_id === cur ? 'selected' : ''}>${esc(p.nombre)}</option>`
+      ).join('');
+    filterLoans();
+  }
+
+  function filterLoans() {
+    const pFilter = document.getElementById('filterPrestamista').value;
+    const eFilter = document.getElementById('filterEstado').value;
+    const dDesde  = document.getElementById('filterDesde').value;
+    const dHasta  = document.getElementById('filterHasta').value;
+    const cFilter = (document.getElementById('filterCliente').value || '').toLowerCase().trim();
+
+    const profMap = Object.fromEntries(allProfiles.map(p => [p.user_id, p.nombre]));
+
+    const filtered = allLoans.filter(l => {
+      if (pFilter && l.prestamista_id !== pFilter) return false;
+      if (eFilter && l.estado !== eFilter)          return false;
+      if (dDesde  && (l.fecha_prestamo || '') < dDesde) return false;
+      if (dHasta  && (l.fecha_prestamo || '') > dHasta) return false;
+      if (cFilter && !(l.cliente_nombre || '').toLowerCase().includes(cFilter)) return false;
+      return true;
+    });
+
+    // Actualizar tarjetas de resumen
+    const totalCapital = filtered.reduce((s, l) => s + Number(l.monto_principal || 0), 0);
+    const totalSaldo   = filtered.reduce((s, l) => s + Number(l.saldo_actual    || 0), 0);
+
+    // Sumar pagos reales de los préstamos filtrados
+    let totalCapCobrado = 0;
+    let totalIntCobrado = 0;
+    filtered.forEach(l => {
+      (l.pagos || []).forEach(p => {
+        const amt = Number(p.amount || 0);
+        if (amt <= 0 || p.type === 'refinanciamiento') return;
+        if (p.type === 'capital') totalCapCobrado += amt;
+        else totalIntCobrado += amt;
+      });
+    });
+
+    document.getElementById('summaryCapital').textContent    = '$' + totalCapital.toLocaleString();
+    document.getElementById('summarySaldo').textContent      = '$' + totalSaldo.toLocaleString();
+    document.getElementById('summaryCapCobrado').textContent = '$' + totalCapCobrado.toLocaleString();
+    document.getElementById('summaryIntCobrado').textContent = '$' + totalIntCobrado.toLocaleString();
+    document.getElementById('summaryCapitalLabel').textContent =
+      filtered.length === allLoans.length
+        ? `${filtered.length} préstamos en total`
+        : `${filtered.length} de ${allLoans.length} préstamos`;
+
+    const tbody = document.getElementById('loansBody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-400 py-8">Sin resultados</td></tr>';
+      document.getElementById('loansCount').textContent = '';
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(l => {
+      const prestamista = esc(profMap[l.prestamista_id] || '—');
+      const clientName  = esc((l.cliente_nombre || '').replace(' %incluido', ''));
+      const isInc       = (l.cliente_nombre || '').includes('%incluido') || l.tipo_interes === 'agregado';
+      const estadoBadge = l.estado === 'active'
+        ? '<span class="badge badge-active">Activo</span>'
+        : '<span class="badge badge-completed">Completado</span>';
+      const tipoBadge   = isInc
+        ? '<span class="badge" style="background:#ede9fe;color:#5b21b6;">% Inc</span>'
+        : '<span class="badge" style="background:#dbeafe;color:#1d4ed8;">Periódico</span>';
+      return `
+        <tr onclick="openLoanDetail('${l.id}')" style="cursor:pointer;" title="Ver detalle del préstamo">
+          <td class="font-medium text-gray-900">${clientName}</td>
+          <td class="text-gray-600">${prestamista}</td>
+          <td style="text-align:right" class="font-semibold">$${Number(l.monto_principal||0).toLocaleString()}</td>
+          <td style="text-align:right" class="font-semibold text-red-600">$${Number(l.saldo_actual||0).toLocaleString()}</td>
+          <td class="text-gray-500">${l.fecha_prestamo || '—'}</td>
+          <td>${estadoBadge}</td>
+          <td>${tipoBadge}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('loansCount').textContent =
+      `Mostrando ${filtered.length} de ${allLoans.length} préstamos · Capital: $${totalCapital.toLocaleString()} · Saldo: $${totalSaldo.toLocaleString()}`;
+  }
+
+  // ============================================================
+  // ACTIVIDAD — filtros por prestamista, fechas, totales
+  // ============================================================
+  function resetPaymentFilters() {
+    const today = localDate();
+    document.getElementById('filterPagosPrestamista').value = '';
+    document.getElementById('filterPagosDesde').value = today;
+    document.getElementById('filterPagosHasta').value = today;
+    renderPayments();
+  }
+
+  function renderPayments() {
+    const pFilter = document.getElementById('filterPagosPrestamista').value;
+    const dDesde  = document.getElementById('filterPagosDesde').value;
+    const dHasta  = document.getElementById('filterPagosHasta').value;
+    const profMap = Object.fromEntries(allProfiles.map(p => [p.user_id, p]));
+
+    // Reconstruir selector de prestamistas preservando selección
+    const sel = document.getElementById('filterPagosPrestamista');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Todos los prestamistas</option>' +
+      allProfiles.filter(p => p.rol === 'prestamista').map(p =>
+        `<option value="${p.user_id}" ${p.user_id === cur ? 'selected' : ''}>${esc(p.nombre)}</option>`
+      ).join('');
+    sel.value = cur;
+
+    // Construir lista de pagos con filtros aplicados
+    let allPayments = [];
+    allLoans.forEach(l => {
+      if (pFilter && l.prestamista_id !== pFilter) return;
+      (l.pagos || []).forEach(p => {
+        const ts      = p.timestamp || p.date || 0;
+        const payDate = ts ? localDate(ts) : null;
+        if (dDesde && payDate && payDate < dDesde) return;
+        if (dHasta && payDate && payDate > dHasta) return;
+        allPayments.push({
+          ...p,
+          clienteName:    (l.cliente_nombre || '').replace(' %incluido', ''),
+          prestamista_id: l.prestamista_id,
+          prestamista:    (profMap[l.prestamista_id] || {}).nombre || '—',
+          payDate
+        });
+      });
+    });
+
+    allPayments.sort((a, b) => (b.timestamp || b.date || 0) - (a.timestamp || a.date || 0));
+
+    // ── Calcular totales ──────────────────────────────────────
+    const pagosReales  = allPayments.filter(p => p.type !== 'refinanciamiento' && Number(p.amount) > 0);
+    const sinPago      = allPayments.filter(p => Number(p.amount) === 0 && p.type !== 'refinanciamiento');
+    const totalCobrado = pagosReales.reduce((s, p) => s + Number(p.amount), 0);
+
+    document.getElementById('totalCobrado').textContent = '$' + totalCobrado.toLocaleString();
+    document.getElementById('totalNPagos').textContent  = pagosReales.length;
+    document.getElementById('totalSinPago').textContent = sinPago.length;
+
+    // Label del rango de fechas
+    const todayStr = localDate();
+    const rangeLabel = (!dDesde && !dHasta)
+      ? 'Sin filtro de fecha'
+      : dDesde === dHasta && dDesde === todayStr
+        ? 'Hoy'
+        : dDesde === dHasta
+          ? dDesde
+          : `${dDesde || '…'} → ${dHasta || '…'}`;
+    document.getElementById('paymentsDateRange').textContent = rangeLabel;
+
+    // ── Desglose por prestamista ──────────────────────────────
+    const contPrest = document.getElementById('cobradoPorPrestamista');
+    if (!pFilter) {
+      const prestMap = {};
+      pagosReales.forEach(p => {
+        if (!prestMap[p.prestamista_id]) prestMap[p.prestamista_id] = { nombre: p.prestamista, total: 0, count: 0 };
+        prestMap[p.prestamista_id].total += Number(p.amount);
+        prestMap[p.prestamista_id].count++;
+      });
+      const prestEntries = Object.values(prestMap).sort((a, b) => b.total - a.total);
+      if (prestEntries.length > 1) {
+        contPrest.classList.remove('hidden');
+        contPrest.innerHTML = `
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide mb-3">Por prestamista</p>
+          ${prestEntries.map(e => `
+            <div class="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
+              <span class="text-sm text-gray-700">${esc(e.nombre)}</span>
+              <div class="text-right">
+                <span class="font-semibold text-sm text-green-600">$${e.total.toLocaleString()}</span>
+                <span class="text-xs text-gray-400 ml-2">${e.count} ${e.count === 1 ? 'pago' : 'pagos'}</span>
+              </div>
+            </div>`).join('')}`;
+      } else {
+        contPrest.classList.add('hidden');
+      }
+    } else {
+      contPrest.classList.add('hidden');
+    }
+
+    // ── Desglose por fecha (sólo si el rango > 1 día) ─────────
+    const contFecha = document.getElementById('cobradoPorFecha');
+    if (dDesde && dHasta && dDesde !== dHasta) {
+      const fechaMap = {};
+      pagosReales.forEach(p => {
+        const d = p.payDate || 'Sin fecha';
+        if (!fechaMap[d]) fechaMap[d] = { total: 0, count: 0 };
+        fechaMap[d].total += Number(p.amount);
+        fechaMap[d].count++;
+      });
+      const fechaEntries = Object.entries(fechaMap).sort((a, b) => b[0].localeCompare(a[0]));
+      if (fechaEntries.length > 0) {
+        contFecha.classList.remove('hidden');
+        contFecha.innerHTML = `
+          <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide mb-3">Por fecha</p>
+          ${fechaEntries.map(([d, v]) => `
+            <div class="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
+              <span class="text-sm text-gray-700">${d}</span>
+              <div class="text-right">
+                <span class="font-semibold text-sm text-green-600">$${v.total.toLocaleString()}</span>
+                <span class="text-xs text-gray-400 ml-2">${v.count} ${v.count === 1 ? 'pago' : 'pagos'}</span>
+              </div>
+            </div>`).join('')}`;
+      } else {
+        contFecha.classList.add('hidden');
+      }
+    } else {
+      contFecha.classList.add('hidden');
+    }
+
+    // ── Renderizar tarjetas de pagos ──────────────────────────
+    const container = document.getElementById('paymentsList');
+    if (allPayments.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-10 text-gray-400">
+          <span class="material-symbols-outlined" style="font-size:40px;">event_busy</span>
+          <p class="mt-2 text-sm">Sin actividad en el período seleccionado</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = allPayments.map(p => {
+      const ts      = p.timestamp || p.date || 0;
+      const dateStr = ts ? new Date(ts).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+      const timeStr = ts ? new Date(ts).toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' }) : '';
+      const isZero  = Number(p.amount) === 0;
+      const isRefin = p.type === 'refinanciamiento';
+
+      const bg      = isRefin ? 'bg-purple-50' : (isZero ? 'bg-red-50' : 'bg-green-50');
+      const icon    = isRefin ? 'autorenew' : (isZero ? 'cancel' : 'payments');
+      const iconCls = isRefin ? 'text-purple-600' : (isZero ? 'text-red-500' : 'text-green-600');
+      const amt     = isZero
+        ? '<span class="text-red-500 font-semibold text-sm">Sin pago</span>'
+        : `<span class="font-semibold text-sm">${isRefin ? '+' : ''}$${Math.abs(Number(p.amount)).toLocaleString()}</span>`;
+      const tipo    = p.type === 'capital' ? 'Capital' : p.type === 'refinanciamiento' ? 'Refinanc.' : 'Interés';
+
+      return `
+        <div class="${bg} rounded-xl p-3 flex items-center gap-3">
+          <span class="material-symbols-outlined ${iconCls}" style="font-size:22px;">${icon}</span>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-gray-900 text-sm truncate">${esc(p.clienteName)}</p>
+            <p class="text-xs text-gray-500">${esc(p.prestamista)} · ${dateStr} ${timeStr}</p>
+            ${p.notes ? `<p class="text-xs text-gray-400 truncate italic mt-0.5">${esc(String(p.notes).substring(0, 80))}</p>` : ''}
+          </div>
+          <div class="text-right shrink-0">
+            ${amt}
+            <p class="text-xs text-gray-400">${tipo}</p>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ============================================================
+  // HISTORIAL DE ELIMINADOS
+  // ============================================================
+  async function deleteHistorialRecord(id) {
+    if (!confirm('¿Eliminar este registro del historial? Esta acción no se puede deshacer.')) return;
+    try {
+      const res = await fetch(`${INSFORGE_URL}/api/database/records/historial_eliminados?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+      });
+      if (await checkExpiry(res)) return;
+      if (!res.ok) { showAdminToast('Error al eliminar el registro.', true); return; }
+      allDeletedHistory = allDeletedHistory.filter(r => String(r.id) !== String(id));
+      renderDeletedHistory();
+      showAdminToast('Registro eliminado del historial.');
+    } catch { showAdminToast('Error de conexión al eliminar.', true); }
+  }
+
+  async function loadDeletedHistory() {
+    try {
+      const res = await fetch(
+        `${INSFORGE_URL}/api/database/records/historial_eliminados?order=created_at.desc&limit=500`,
+        { headers: { 'Authorization': `Bearer ${getAdminToken()}` } }
+      );
+      if (await checkExpiry(res)) return;
+      allDeletedHistory = res.ok ? (await res.json()) : [];
+    } catch { allDeletedHistory = []; }
+  }
+
+  function renderDeletedHistory() {
+    const profMap = Object.fromEntries(allProfiles.map(p => [p.user_id, p.nombre]));
+
+    // Reconstruir selector preservando selección
+    const sel = document.getElementById('filterDeletedPrestamista');
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Todos los prestamistas</option>' +
+      allProfiles.filter(p => p.rol === 'prestamista').map(p =>
+        `<option value="${p.user_id}" ${p.user_id === cur ? 'selected' : ''}>${esc(p.nombre)}</option>`
+      ).join('');
+    sel.value = cur;
+
+    const pFilter = sel.value;
+    const dDesde  = document.getElementById('filterDeletedDesde').value;
+    const dHasta  = document.getElementById('filterDeletedHasta').value;
+
+    const filtered = allDeletedHistory.filter(r => {
+      if (pFilter && r.prestamista_id !== pFilter) return false;
+      if (dDesde || dHasta) {
+        const d = r.created_at ? r.created_at.split('T')[0] : null;
+        if (dDesde && d && d < dDesde) return false;
+        if (dHasta && d && d > dHasta) return false;
+      }
+      return true;
+    });
+
+    const tbody = document.getElementById('deletedBody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-400 py-10">
+        <span class="material-symbols-outlined" style="font-size:32px;display:block;margin-bottom:8px;">delete_sweep</span>
+        Sin registros eliminados en este período
+      </td></tr>`;
+      document.getElementById('deletedCount').textContent = '';
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(r => {
+      const prestamistaNombre = esc(profMap[r.prestamista_id] || '—');
+      const datos = typeof r.datos_eliminados === 'string'
+        ? JSON.parse(r.datos_eliminados)
+        : (r.datos_eliminados || {});
+
+      const monto    = datos.amount !== undefined ? Number(datos.amount) : null;
+      const isZero   = monto === 0;
+      const montoStr = monto === null ? '—' : isZero ? 'Sin pago' : '$' + monto.toLocaleString();
+      const montoClass = isZero ? 'text-red-500' : 'font-semibold';
+
+      const tipoPago = datos.type === 'capital'         ? 'Capital'
+                     : datos.type === 'interest'        ? 'Interés'
+                     : datos.type === 'refinanciamiento' ? 'Refinanciamiento'
+                     : datos.type || '—';
+
+      const notas = datos.notes ? esc(String(datos.notes).substring(0, 60)) : '—';
+
+      // Fecha del pago original
+      const tsOrig   = datos.timestamp || datos.date || 0;
+      const fechaPago = tsOrig
+        ? new Date(tsOrig).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' })
+        : '—';
+
+      // Fecha en que fue eliminado
+      const fechaElim = r.created_at
+        ? new Date(r.created_at).toLocaleString('es-ES', {
+            day:'2-digit', month:'short', year:'numeric',
+            hour:'2-digit', minute:'2-digit'
+          })
+        : '—';
+
+      const deleteBtn = r.id
+        ? `<button onclick="deleteHistorialRecord('${r.id}')"
+                  title="Eliminar este registro"
+                  style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:8px;padding:4px 8px;cursor:pointer;transition:background .15s;"
+                  onmouseover="this.style.background='rgba(239,68,68,0.25)'"
+                  onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+             <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px;">delete</span>
+           </button>`
+        : '';
+
+      return `
+        <tr>
+          <td class="text-xs font-medium" style="color:#f87171;">${fechaElim}</td>
+          <td class="font-medium">${prestamistaNombre}</td>
+          <td>${esc(r.cliente_nombre || '—')}</td>
+          <td style="text-align:right" class="${montoClass}">${montoStr}</td>
+          <td>
+            <span class="badge" style="background:rgba(239,68,68,0.15);color:#f87171;font-size:11px;">${tipoPago}</span>
+          </td>
+          <td class="text-gray-500 italic text-xs">${notas}</td>
+          <td class="text-gray-500 text-xs">${fechaPago}</td>
+          <td style="text-align:center;">${deleteBtn}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('deletedCount').textContent =
+      `${filtered.length} registro${filtered.length !== 1 ? 's' : ''} eliminado${filtered.length !== 1 ? 's' : ''}`;
+  }
+
+  // ============================================================
+  // NAVEGACIÓN POR TABS
+  // ============================================================
+  const PANELS = ['dashboard', 'users', 'loans', 'payments', 'deleted'];
+
+  function switchTab(name) {
+    PANELS.forEach(t => {
+      document.getElementById(`panel-${t}`).classList.toggle('hidden', t !== name);
+      const btn = document.getElementById(`tab-${t}`);
+      if (t === name) {
+        btn.classList.add('tab-active');
+        btn.classList.remove('text-gray-500');
+      } else {
+        btn.classList.remove('tab-active');
+        btn.classList.add('text-gray-500');
+      }
+    });
+  }
+
+  // ============================================================
+  // UTILIDADES
+  // ============================================================
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+  // ============================================================
+  // DETALLE DE PRÉSTAMO
+  // ============================================================
+  // ============================================================
+  // ELIMINAR CLIENTE COMPLETO
+  // ============================================================
+  function showDeleteClientConfirm() {
+    const l = _currentLoanDetail;
+    if (!l) return;
+    const nombre = (l.cliente_nombre || '').replace(' %incluido', '');
+    const cedula = l.cliente_cedula;
+    const clientLoans = cedula
+      ? allLoans.filter(x => x.cliente_cedula === cedula)
+      : allLoans.filter(x => (x.cliente_nombre || '').replace(' %incluido', '') === nombre);
+    document.getElementById('ldDeleteConfirmText').innerHTML =
+      `¿Estás seguro? Se eliminarán <strong style="color:#fca5a5;">${clientLoans.length} préstamo(s)</strong> de <strong style="color:#fca5a5;">"${esc(nombre)}"</strong> de forma <strong>permanente</strong> e irreversible.`;
+    document.getElementById('ldDeleteConfirm').classList.remove('hidden');
+    document.getElementById('ldDeleteBtn').classList.add('hidden');
+  }
+
+  function cancelDeleteClient() {
+    document.getElementById('ldDeleteConfirm').classList.add('hidden');
+    document.getElementById('ldDeleteBtn').classList.remove('hidden');
+  }
+
+  async function confirmDeleteClient() {
+    const l = _currentLoanDetail;
+    if (!l) return;
+    const nombre = (l.cliente_nombre || '').replace(' %incluido', '');
+    const cedula = l.cliente_cedula;
+
+    const clientLoans = cedula
+      ? allLoans.filter(x => x.cliente_cedula === cedula)
+      : allLoans.filter(x => (x.cliente_nombre || '').replace(' %incluido', '') === nombre);
+
+    const btn = document.getElementById('ldConfirmDeleteBtn');
+    btn.disabled = true;
+    btn.textContent = 'Eliminando...';
+
+    let errors = 0;
+
+    // Eliminar todos los préstamos del cliente
+    for (const loan of clientLoans) {
+      try {
+        const res = await fetch(`${INSFORGE_URL}/api/database/records/prestamos?id=eq.${loan.id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+        });
+        if (await checkExpiry(res)) return;
+        if (!res.ok) errors++;
+      } catch { errors++; }
+    }
+
+    // Eliminar entradas de historial_eliminados del cliente
+    const histToDelete = allDeletedHistory.filter(r => r.cliente_nombre === nombre);
+    for (const h of histToDelete) {
+      if (!h.id) continue;
+      try {
+        const res = await fetch(`${INSFORGE_URL}/api/database/records/historial_eliminados?id=eq.${h.id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+        });
+        if (!res.ok) errors++;
+      } catch {}
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Sí, eliminar';
+    closeLoanDetail();
+
+    await Promise.all([loadAllLoans(), loadDeletedHistory()]);
+    renderLoans();
+    renderDeletedHistory();
+
+    showAdminToast(
+      errors === 0
+        ? `Cliente "${nombre}" eliminado correctamente.`
+        : `Cliente eliminado con ${errors} error(es).`,
+      errors > 0
+    );
+  }
+
+  function showAdminToast(msg, isError = false) {
+    let t = document.getElementById('adminToast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'adminToast';
+      t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);padding:13px 28px;border-radius:14px;font-size:14px;font-weight:600;z-index:9999;pointer-events:none;transition:opacity 0.4s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+      document.body.appendChild(t);
+    }
+    t.style.background = isError ? 'rgba(127,29,29,0.95)'  : 'rgba(20,83,45,0.95)';
+    t.style.color      = isError ? '#fca5a5'               : '#86efac';
+    t.style.border     = `1px solid ${isError ? '#dc2626' : '#16a34a'}`;
+    t.textContent      = msg;
+    t.style.opacity    = '1';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3500);
+  }
+
+  function openLoanDetail(loanId) {
+    const l = allLoans.find(x => String(x.id) === String(loanId));
+    if (!l) return;
+    _currentLoanDetail = l;
+
+    // Resetear panel de confirmación de eliminación
+    document.getElementById('ldDeleteConfirm').classList.add('hidden');
+    document.getElementById('ldDeleteBtn').classList.remove('hidden');
+
+    const profMap       = Object.fromEntries(allProfiles.map(p => [p.user_id, p.nombre]));
+    const prestamista   = profMap[l.prestamista_id] || '—';
+    const clientName    = (l.cliente_nombre || '').replace(' %incluido', '');
+    const pagos         = Array.isArray(l.pagos)
+      ? [...l.pagos].sort((a, b) => (b.timestamp || b.date || 0) - (a.timestamp || a.date || 0))
+      : [];
+
+    const isInc         = (l.cliente_nombre || '').includes('%incluido') || l.tipo_interes === 'agregado';
+    const frecLabel     = { diario:'Diario', semanal:'Semanal', quincenal:'Quincenal', mensual:'Mensual' }[l.frecuencia] || l.frecuencia || '—';
+    const tipoLabel     = isInc ? '% Incluido' : 'Periódico';
+    const estadoBadge   = l.estado === 'active'
+      ? '<span class="badge badge-active">Activo</span>'
+      : '<span class="badge badge-completed">Completado</span>';
+
+    // Totales calculados de los pagos
+    const pagosReales   = pagos.filter(p => p.type !== 'refinanciamiento' && Number(p.amount) > 0);
+    const totalPagado   = pagosReales.reduce((s, p) => s + Number(p.amount || 0), 0);
+    const totalCapPag   = pagos.filter(p => p.type === 'capital'  && Number(p.amount) > 0).reduce((s, p) => s + Number(p.amount || 0), 0);
+    const totalIntPag   = pagos.filter(p => p.type !== 'capital' && p.type !== 'refinanciamiento' && Number(p.amount) > 0).reduce((s, p) => s + Number(p.amount || 0), 0);
+
+    // Cabecera del modal
+    document.getElementById('ldClientName').textContent    = clientName || '—';
+    document.getElementById('ldPrestamista').textContent   = prestamista;
+    document.getElementById('ldEstado').innerHTML          = estadoBadge;
+
+    // Datos del cliente
+    document.getElementById('ldCedula').textContent    = l.cliente_cedula    || '—';
+    document.getElementById('ldTelefono').textContent  = l.cliente_telefono  || '—';
+    document.getElementById('ldDireccion').textContent = l.cliente_direccion || '—';
+
+    // Datos del préstamo
+    document.getElementById('ldCapital').textContent   = '$' + Number(l.monto_principal || 0).toLocaleString();
+    document.getElementById('ldTasa').textContent      = Number(l.tasa_interes || 0) + '%';
+    document.getElementById('ldTipo').textContent      = tipoLabel;
+    document.getElementById('ldFrecuencia').textContent= frecLabel;
+    document.getElementById('ldPlazo').textContent     = (l.plazo || '—') + (l.plazo ? ' cuotas' : '');
+    document.getElementById('ldFecha').textContent     = l.fecha_prestamo || '—';
+    document.getElementById('ldObservaciones').textContent = l.observaciones || '—';
+
+    // Resumen de pagos
+    document.getElementById('ldTotalPagado').textContent  = '$' + totalPagado.toLocaleString();
+    document.getElementById('ldCapPagado').textContent    = '$' + totalCapPag.toLocaleString();
+    document.getElementById('ldIntPagado').textContent    = '$' + totalIntPag.toLocaleString();
+    document.getElementById('ldSaldoActual').textContent  = '$' + Number(l.saldo_actual || 0).toLocaleString();
+
+    // Historial de pagos
+    const tbody = document.getElementById('ldPagosBody');
+    if (pagos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-400 py-6">Sin pagos registrados</td></tr>`;
+    } else {
+      tbody.innerHTML = pagos.map((p, idx) => {
+        const ts      = p.timestamp || p.date || 0;
+        const fecha   = ts ? new Date(ts).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+        const hora    = ts ? new Date(ts).toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' }) : '';
+        const isZero  = Number(p.amount) === 0;
+        const isRefin = p.type === 'refinanciamiento';
+        const tipo    = p.type === 'capital' ? 'Capital'
+                      : p.type === 'interest' ? 'Interés'
+                      : p.type === 'refinanciamiento' ? 'Refinanc.'
+                      : p.type || '—';
+        const tipoCls = p.type === 'capital'   ? 'background:rgba(59,130,246,0.2);color:#93c5fd;'
+                      : p.type === 'interest'  ? 'background:rgba(34,197,94,0.2);color:#86efac;'
+                      : 'background:rgba(168,85,247,0.2);color:#d8b4fe;';
+        const montoStr = isZero ? '<span style="color:#f87171;">Sin pago</span>'
+                       : `<span style="color:${isRefin ? '#d8b4fe' : '#f1f5f9'};font-weight:600;">${isRefin ? '+' : ''}$${Math.abs(Number(p.amount)).toLocaleString()}</span>`;
+        return `
+          <tr>
+            <td style="font-size:13px;">${fecha}<br><span style="color:#475569;font-size:11px;">${hora}</span></td>
+            <td><span class="badge" style="${tipoCls}font-size:11px;">${tipo}</span></td>
+            <td style="text-align:right;">${montoStr}</td>
+            <td style="font-size:12px;color:#64748b;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.notes || '—')}</td>
+            <td style="text-align:center;padding:4px 6px;">
+              <button onclick="deletePaymentFromLoan('${l.id}', ${idx})"
+                      title="Eliminar este pago"
+                      style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:8px;padding:3px 7px;cursor:pointer;"
+                      onmouseover="this.style.background='rgba(239,68,68,0.25)'"
+                      onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+                <span class="material-symbols-outlined" style="font-size:15px;vertical-align:-3px;">delete</span>
+              </button>
+            </td>
+          </tr>`;
+      }).join('');
+    }
+
+    document.getElementById('loanDetailModal').classList.remove('hidden');
+  }
+
+  function closeLoanDetail() {
+    document.getElementById('loanDetailModal').classList.add('hidden');
+  }
+
+  async function deletePaymentFromLoan(loanId, paymentIdx) {
+    if (!confirm('¿Eliminar este pago del historial? Esta acción no se puede deshacer.')) return;
+    const loan = allLoans.find(x => String(x.id) === String(loanId));
+    if (!loan) { showAdminToast('Préstamo no encontrado.', true); return; }
+
+    const pagos = Array.isArray(loan.pagos) ? loan.pagos : [];
+
+    // El modal muestra los pagos ordenados por fecha desc (igual que openLoanDetail).
+    // Usamos el mismo orden para que el índice coincida con lo que ve el usuario.
+    const sortedPagos = [...pagos].sort((a, b) => (b.timestamp || b.date || 0) - (a.timestamp || a.date || 0));
+    const paymentToRemove = sortedPagos[paymentIdx];
+    if (!paymentToRemove) { showAdminToast('Pago no encontrado.', true); return; }
+
+    // Eliminar por referencia del array original para no borrar el elemento equivocado
+    const newPagos = pagos.filter(p => p !== paymentToRemove);
+
+    try {
+      const res = await fetch(`${INSFORGE_URL}/api/database/records/prestamos?id=eq.${loanId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${getAdminToken()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ pagos: newPagos })
+      });
+      if (await checkExpiry(res)) return;
+      if (!res.ok) { showAdminToast('Error al eliminar el pago.', true); return; }
+
+      // Update local data
+      loan.pagos = newPagos;
+      if (_currentLoanDetail && String(_currentLoanDetail.id) === String(loanId)) {
+        _currentLoanDetail.pagos = newPagos;
+      }
+
+      // Re-render modal with updated loan
+      openLoanDetail(loanId);
+      showAdminToast('Pago eliminado correctamente.');
+    } catch { showAdminToast('Error de conexión al eliminar el pago.', true); }
+  }
+</script>
+
+<!-- ============================================================ -->
+<!-- MODAL: DETALLE DE PRÉSTAMO                                   -->
+<!-- ============================================================ -->
+<div id="loanDetailModal" class="modal-overlay hidden" onclick="if(event.target===this)closeLoanDetail()">
+  <div class="modal-card" style="max-width:600px;">
+
+    <!-- Cabecera -->
+    <div class="flex items-start justify-between mb-5">
+      <div>
+        <h3 class="text-xl font-bold text-gray-900" id="ldClientName">—</h3>
+        <p class="text-sm text-gray-500 mt-0.5">Prestamista: <span id="ldPrestamista" class="font-medium text-gray-700"></span></p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="ldEstado"></span>
+        <button onclick="closeLoanDetail()" class="text-gray-400 hover:text-gray-600">
+          <span class="material-symbols-outlined" style="font-size:24px;">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Datos del cliente -->
+    <div style="background:#0f172a;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide mb-3">Datos del Cliente</p>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <p class="text-xs text-gray-500">Cédula / ID</p>
+          <p class="text-sm font-medium text-gray-200 mt-0.5" id="ldCedula">—</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Teléfono</p>
+          <p class="text-sm font-medium text-gray-200 mt-0.5" id="ldTelefono">—</p>
+        </div>
+        <div class="col-span-2">
+          <p class="text-xs text-gray-500">Dirección</p>
+          <p class="text-sm font-medium text-gray-200 mt-0.5" id="ldDireccion">—</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Datos del préstamo -->
+    <div style="background:#0f172a;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide mb-3">Condiciones del Préstamo</p>
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <p class="text-xs text-gray-500">Capital Inicial</p>
+          <p class="text-lg font-bold text-blue-400 mt-0.5" id="ldCapital">—</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Tasa</p>
+          <p class="text-lg font-bold text-gray-200 mt-0.5" id="ldTasa">—</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Tipo</p>
+          <p class="text-sm font-medium text-gray-300 mt-0.5" id="ldTipo">—</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Frecuencia</p>
+          <p class="text-sm font-medium text-gray-300 mt-0.5" id="ldFrecuencia">—</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Plazo</p>
+          <p class="text-sm font-medium text-gray-300 mt-0.5" id="ldPlazo">—</p>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500">Fecha</p>
+          <p class="text-sm font-medium text-gray-300 mt-0.5" id="ldFecha">—</p>
+        </div>
+        <div class="col-span-3">
+          <p class="text-xs text-gray-500">Observaciones</p>
+          <p class="text-sm text-gray-400 mt-0.5" id="ldObservaciones">—</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen de pagos -->
+    <div class="grid grid-cols-4 gap-3 mb-4">
+      <div class="card p-3 text-center">
+        <p class="text-xs text-gray-500">Total Cobrado</p>
+        <p class="font-bold text-green-400 mt-1" id="ldTotalPagado">—</p>
+      </div>
+      <div class="card p-3 text-center">
+        <p class="text-xs text-gray-500">Capital Pag.</p>
+        <p class="font-bold text-blue-400 mt-1" id="ldCapPagado">—</p>
+      </div>
+      <div class="card p-3 text-center">
+        <p class="text-xs text-gray-500">Interés Pag.</p>
+        <p class="font-bold text-purple-400 mt-1" id="ldIntPagado">—</p>
+      </div>
+      <div class="card p-3 text-center">
+        <p class="text-xs text-gray-500">Saldo</p>
+        <p class="font-bold text-red-400 mt-1" id="ldSaldoActual">—</p>
+      </div>
+    </div>
+
+    <!-- Historial de pagos -->
+    <p class="text-xs text-gray-500 uppercase font-semibold tracking-wide mb-2">Historial de Pagos</p>
+    <div style="border-radius:12px;overflow:hidden;border:1px solid #334155;">
+      <div style="overflow-x:auto;max-height:280px;overflow-y:auto;">
+        <table class="w-full">
+          <thead style="position:sticky;top:0;z-index:1;">
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th style="text-align:right;">Monto</th>
+              <th>Notas</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ldPagosBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Panel de confirmación de eliminación (oculto por defecto) -->
+    <div id="ldDeleteConfirm" class="hidden mt-5 p-4 rounded-xl" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.35);">
+      <div class="flex items-start gap-3 mb-4">
+        <span class="material-symbols-outlined" style="color:#f87171;font-size:22px;flex-shrink:0;margin-top:1px;">warning</span>
+        <p id="ldDeleteConfirmText" class="text-sm leading-relaxed" style="color:#fca5a5;"></p>
+      </div>
+      <div class="flex gap-3">
+        <button id="ldConfirmDeleteBtn" onclick="confirmDeleteClient()"
+                class="flex-1 py-2.5 rounded-xl font-semibold text-sm transition-colors"
+                style="background:#dc2626;color:white;">
+          Sí, eliminar
+        </button>
+        <button onclick="cancelDeleteClient()"
+                class="flex-1 py-2.5 rounded-xl font-semibold text-sm transition-colors"
+                style="border:1px solid #475569;color:#94a3b8;">
+          Cancelar
+        </button>
+      </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="flex gap-3 mt-5">
+      <button id="ldDeleteBtn" onclick="showDeleteClientConfirm()"
+              class="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors"
+              style="background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.35);">
+        <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px;margin-right:4px;">person_remove</span>
+        Eliminar Cliente
+      </button>
+      <button onclick="closeLoanDetail()"
+              class="flex-1 border border-gray-600 text-gray-300 py-3 rounded-xl font-semibold text-sm hover:bg-gray-700 transition-colors">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
